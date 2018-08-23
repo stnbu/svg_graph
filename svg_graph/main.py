@@ -5,27 +5,14 @@ import xml.etree.ElementTree as ET
 
 class LineGraph(object):
 
-    def __init__(self, title, origin, hight, width, points, labels):
+    def __init__(self, title, hight, width, points, labels):
         self.title = title
-        self.origin = origin  # 0/400
         self.hight = hight
         self.width = width
         self.labels = labels
 
         self.points = points
-
-        self.left = self.origin[0]
-        self.bottom = self.hight
-        self.right = self.width
-        self.top = self.origin[1] - self.hight
-
         self.over = 100
-
-    def __getattr__(self, name):
-        if not name.startswith('str_'):
-            raise AttributeError(name)
-        real_name = name[4:]
-        return str(getattr(self, real_name))
 
     def get_label_positions(self, axis):
         if axis == 'x':
@@ -63,10 +50,10 @@ class LineGraph(object):
         line_x = ET.Element(
             'line',
             attrib={
-                'x1': self.str_left,
-                'y1': self.str_top,
-                'x2': self.str_left,
-                'y2': self.str_bottom,
+                'x1': '0',
+                'y1': '0',
+                'x2': '0',
+                'y2': str(self.hight),
             },
         )
         g.append(line_x)
@@ -77,10 +64,10 @@ class LineGraph(object):
         line_y = ET.Element(
             'line',
             attrib={
-                'x1': self.str_left,
-                'y1': self.str_bottom,
-                'x2': self.str_right,
-                'y2': self.str_bottom,
+                'x1': '0',
+                'y1': str(self.hight),
+                'x2': str(self.width),
+                'y2': str(self.hight),
             },
         )
         g.append(line_y)
@@ -144,7 +131,7 @@ if __name__ == '__main__':
 
     from tests import top, bottom
 
-    lg = LineGraph('Look at This Graph', (0, 400),
+    lg = LineGraph('Look at This Graph',
                    hight=400,
                    width=700,
                    points=[
