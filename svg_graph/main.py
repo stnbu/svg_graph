@@ -30,10 +30,12 @@ class LineGraph(object):
     def get_label_positions(self, axis):
         if axis == 'x':
             labels = self.x_labels
+            total = self.width
         else:
-            labels = self.y_labels
+            labels = list(reversed(self.y_labels))
+            total = self.hight
 
-        interlabel_distance = self.width / (len(labels) - 1)
+        interlabel_distance = total / (len(labels) - 1)
         for i, label in enumerate(labels):
             if label is None:
                 continue
@@ -102,11 +104,7 @@ class LineGraph(object):
         svg.append(g)
 
         g = ET.Element('g', attrib={'class': 'labels y-labels'})
-        for y, label in [
-                ('15', '15'),
-                ('131', '10'),
-                ('248', '5'),
-                ('373', '0'),]:
+        for y, label in self.get_label_positions('y'):
             text = ET.Element('text', attrib={'x': '80', 'y': y})
             text.text = label
             g.append(text)
@@ -145,7 +143,6 @@ if __name__ == '__main__':
 
     from tests import top, bottom
 
-
     lg = LineGraph('Look at This Graph', (0, 400),
                    hight=400,
                    width=700,
@@ -156,24 +153,13 @@ if __name__ == '__main__':
                        (99, 200),
                        (444, 50),
                        (600,300)],
-                   labels=[(2008, 2009, 2010, 2011, 2012), (None, 5, 10, 14)]
-
+                   labels=[
+                       (2008, 2009, 2010, 2011, 2012),
+                       (None, 5, 10, 14)]
     )
 
-    print(list(lg.get_label_positions('x')))
-
-    print("""
-                ('100', '2008'),
-                ('246', '2009'),
-                ('392', '2010'),
-                ('538', '2011'),
-                ('684', '2012'),]:
-    """)
-
-    #import sys; sys.exit()
-
     page = top + str(lg) + bottom
-    # Yuck. Don't how to get around using a file.
+    # Yuck. Don't know how to get around using a file.
     path = '/tmp/.test.html'
     with open(path, 'w') as f:
         f.write(page)
