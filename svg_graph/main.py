@@ -1,61 +1,16 @@
+# -*- mode: python; coding utf-8 -*-
+
 import xml.etree.ElementTree as ET
 
-top = """<html>
-    <head>
-	<style>
-	 body {
-	     font-family: 'Open Sans', sans-serif;
-	 }
-
-	 .graph .labels.x-labels {
-	     text-anchor: middle;
-	 }
-
-	 .graph .labels.y-labels {
-	     text-anchor: end;
-	 }
-
-
-	 .graph {
-	     height: 500px;
-	     width: 800px;
-	 }
-
-	 .graph .grid {
-	     stroke: #ccc;
-	     stroke-dasharray: 0;
-	     stroke-width: 1;
-	 }
-
-	 .labels {
-	     font-size: 13px;
-	 }
-
-	 .label-title {
-	     font-weight: bold;
-	     text-transform: uppercase;
-	     font-size: 12px;
-	     fill: black;
-	 }
-
-	 .data {
-	     fill: red;
-	     stroke-width: 1;
-	</style>
-    </head>
-    <body>
-"""
-
-bottom = """    </body>
-</html>"""
 
 class LineGraph(object):
 
-    def __init__(self, title, origin, hight, width, points):
+    def __init__(self, title, origin, hight, width, points, labels):
         self.title = title
         self.origin = origin  # 0/400
         self.hight = hight
         self.width = width
+        self.x_labels, self.y_labels = labels
 
         self.points = points
 
@@ -64,15 +19,27 @@ class LineGraph(object):
         self.right = self.width
         self.top = self.origin[1] - self.hight
 
+        self.over = 100
+
     def __getattr__(self, name):
         if not name.startswith('str_'):
             raise AttributeError(name)
         real_name = name[4:]
         return str(getattr(self, real_name))
 
-    def __str__(self):
+    def get_label_positions(self, axis):
+        if axis == 'x':
+            labels = self.x_labels
+        else:
+            labels = self.y_labels
 
-        over = '100'
+        interlabel_distance = self.width / (len(labels) - 1)
+        for i, label in enumerate(labels):
+            if label is None:
+                continue
+            yield str(int(i * interlabel_distance)), str(label)
+
+    def __str__(self):
 
         svg = ET.Element(
             'svg',
@@ -90,7 +57,7 @@ class LineGraph(object):
         title.text = self.title
 
         g = ET.Element('g', attrib={'class': 'grid x-grid', 'id': 'xGrid',
-                                    'transform': 'translate(%(over)s,0)' % dict(over=over)})
+                                    'transform': 'translate(%(over)s,0)' % dict(over=self.over)})
         line_x = ET.Element(
             'line',
             attrib={
@@ -104,7 +71,7 @@ class LineGraph(object):
         svg.append(g)
 
         g = ET.Element('g', attrib={'class': 'grid y-grid', 'id': 'yGrid',
-                                    'transform': 'translate(%(over)s,0)' % dict(over=over)})
+                                    'transform': 'translate(%(over)s,0)' % dict(over=self.over)})
         line_y = ET.Element(
             'line',
             attrib={
@@ -118,17 +85,18 @@ class LineGraph(object):
         svg.append(g)
 
         g = ET.Element('g', attrib={'class': 'labels x-labels',
-                                    'transform': 'translate(%(over)s,20)' % dict(over=over)})
-        for x, label in [
-                ('100', '2008'),
-                ('246', '2009'),
-                ('392', '2010'),
-                ('538', '2011'),
-                ('684', '2012'),]:
-            text = ET.Element('text', attrib={'x': x, 'y': '400'})
+                                    'transform': 'translate(%(over)s,20)' % dict(over=self.over)})
+        for x, label in self.get_label_positions('x'):
+            text = ET.Element('text', attrib={'x': x, 'y': str(self.hight)})
             text.text = label
             g.append(text)
-        text = ET.Element('text', attrib={'x': '400', 'y': '440', 'class': 'label-title'})
+        text = ET.Element(
+            'text',
+            attrib={
+                'x': str(int(self.width / 2)),
+                'y': str(int(self.hight + 40)),
+                'class': 'label-title'
+            })
         text.text = 'Year'
         g.append(text)
         svg.append(g)
@@ -154,7 +122,7 @@ class LineGraph(object):
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
-        g = ET.Element('g', attrib={'transform': 'translate(%(over)s,0)' % dict(over=over)})
+        g = ET.Element('g', attrib={'transform': 'translate(%(over)s,0)' % dict(over=self.over)})
         polyline = ET.Element(
             'polyline',
             attrib={
@@ -171,6 +139,13 @@ class LineGraph(object):
 
 if __name__ == '__main__':
 
+    import webbrowser
+    import pathlib
+    import os
+
+    from tests import top, bottom
+
+
     lg = LineGraph('Look at This Graph', (0, 400),
                    hight=400,
                    width=700,
@@ -180,7 +155,29 @@ if __name__ == '__main__':
                        (53, 87),
                        (99, 200),
                        (444, 50),
-                       (600,300),
-                   ])
+                       (600,300)],
+                   labels=[(2008, 2009, 2010, 2011, 2012), (None, 5, 10, 14)]
 
-    print(top, lg, bottom)
+    )
+
+    print(list(lg.get_label_positions('x')))
+
+    print("""
+                ('100', '2008'),
+                ('246', '2009'),
+                ('392', '2010'),
+                ('538', '2011'),
+                ('684', '2012'),]:
+    """)
+
+    #import sys; sys.exit()
+
+    page = top + str(lg) + bottom
+    # Yuck. Don't how to get around using a file.
+    path = '/tmp/.test.html'
+    with open(path, 'w') as f:
+        f.write(page)
+
+    uri = pathlib.Path(path).as_uri()
+
+    webbrowser.open(uri, new=0, autoraise=True)
