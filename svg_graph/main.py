@@ -10,7 +10,7 @@ class LineGraph(object):
         self.origin = origin  # 0/400
         self.hight = hight
         self.width = width
-        self.x_labels, self.y_labels = labels
+        self.labels = labels
 
         self.points = points
 
@@ -29,10 +29,10 @@ class LineGraph(object):
 
     def get_label_positions(self, axis):
         if axis == 'x':
-            labels = self.x_labels
+            labels = self.labels[0][1]
             total = self.width
         else:
-            labels = list(reversed(self.y_labels))
+            labels = list(reversed(self.labels[1][1]))
             total = self.hight
 
         interlabel_distance = total / (len(labels) - 1)
@@ -86,30 +86,31 @@ class LineGraph(object):
         g.append(line_y)
         svg.append(g)
 
-        g = ET.Element('g', attrib={'class': 'labels x-labels',
-                                    'transform': 'translate(%(over)s,20)' % dict(over=self.over)})
+        g = ET.Element('g', attrib={
+            'class': 'labels x-labels',
+            'transform': 'translate(%(over)s,20)' % dict(over=self.over)})
         for x, label in self.get_label_positions('x'):
             text = ET.Element('text', attrib={'x': x, 'y': str(self.hight)})
             text.text = label
             g.append(text)
-        text = ET.Element(
-            'text',
-            attrib={
-                'x': str(int(self.width / 2)),
-                'y': str(int(self.hight + 40)),
-                'class': 'label-title'
-            })
-        text.text = 'Year'
+        text = ET.Element('text', attrib={
+            'x': str(int(self.width / 2)),
+            'y': str(int(self.hight + 40)),
+            'class': 'label-title'})
+        text.text = self.labels[0][0]
         g.append(text)
         svg.append(g)
 
         g = ET.Element('g', attrib={'class': 'labels y-labels'})
         for y, label in self.get_label_positions('y'):
-            text = ET.Element('text', attrib={'x': '80', 'y': y})
+            text = ET.Element('text', attrib={'x': str(self.over - 20), 'y': y})
             text.text = label
             g.append(text)
-        text = ET.Element('text', attrib={'x': '50', 'y': '200', 'class': 'Price'})
-        text.text = 'Year'
+        text = ET.Element('text', attrib={
+            'x': str(self.over / 2),
+            'y': str(self.hight / 2),
+            'class': 'label-title'})
+        text.text = self.labels[1][0]
         g.append(text)
         svg.append(g)
 
@@ -154,8 +155,8 @@ if __name__ == '__main__':
                        (444, 50),
                        (600,300)],
                    labels=[
-                       (2008, 2009, 2010, 2011, 2012),
-                       (None, 5, 10, 14)]
+                       ('Year', (2008, 2009, 2010, 2011, 2012)),
+                       ('Price', (None, 5, 10, 14))]
     )
 
     page = top + str(lg) + bottom
