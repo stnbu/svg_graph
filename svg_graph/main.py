@@ -92,8 +92,8 @@ class LineGraph(object):
 
         points = []
         for x, y in self.points:
-            h = x
-            v = self.height - y
+            h = x - self.right
+            v = self.height - self.down - y
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
