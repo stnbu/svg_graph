@@ -43,9 +43,6 @@ class LineGraph(object):
                 transform: translate(%(right)spx, %(down)spx);
                 height: %(height)spx;
                 width: %(width)spx;
-                stroke: #ccc;
-                stroke-dasharray: 0;
-                stroke-width: 1;
             }
             .axis {
                 stroke: #ccc;
