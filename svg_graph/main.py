@@ -1,6 +1,6 @@
 # -*- mode: python; coding utf-8 -*-
 
-import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element, tostring
 
 
 class LineGraph(object):
@@ -33,7 +33,7 @@ class LineGraph(object):
 
     def __str__(self):
 
-        style = ET.Element('style')
+        style = Element('style')
         style.text = """
             /* requires HTML5.2 */
             /* https://www.w3.org/TR/html52/document-metadata.html#the-style-element */
@@ -49,7 +49,7 @@ class LineGraph(object):
             width=self.width+self.right,
         )
 
-        svg = ET.Element(
+        svg = Element(
             'svg',
             attrib={
                 'version': '1.2',
@@ -61,11 +61,11 @@ class LineGraph(object):
             }
         )
 
-        title = ET.Element('title', attib={'id': 'title'})
+        title = Element('title', attib={'id': 'title'})
         title.text = self.title
 
-        g = ET.Element('g', attrib={'class': 'grid x-grid', 'id': 'xGrid'})
-        line_x = ET.Element(
+        g = Element('g', attrib={'class': 'grid x-grid', 'id': 'xGrid'})
+        line_x = Element(
             'line',
             attrib={
                 'x1': '0',
@@ -77,8 +77,8 @@ class LineGraph(object):
         g.append(line_x)
         svg.append(g)
 
-        g = ET.Element('g', attrib={'class': 'grid y-grid', 'id': 'yGrid'})
-        line_y = ET.Element(
+        g = Element('g', attrib={'class': 'grid y-grid', 'id': 'yGrid'})
+        line_y = Element(
             'line',
             attrib={
                 'x1': '0',
@@ -97,8 +97,8 @@ class LineGraph(object):
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
-        g = ET.Element('g', attrib={'class': 'graph'})
-        polyline = ET.Element(
+        g = Element('g', attrib={'class': 'graph'})
+        polyline = Element(
             'polyline',
             attrib={
                 'fill': 'none',
@@ -109,8 +109,8 @@ class LineGraph(object):
         )
         g.append(polyline)
         svg.append(g)
-        style_text = ET.tostring(style).decode('utf-8')
-        svg_text = ET.tostring(svg).decode('utf-8')
+        style_text = tostring(style).decode('utf-8')
+        svg_text = tostring(svg).decode('utf-8')
         svg_text = svg_text.replace('&#10;', '\n')  # ZMG FIXME ZZZ TODO
         return style_text + svg_text
 
