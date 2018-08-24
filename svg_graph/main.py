@@ -41,8 +41,6 @@ class LineGraph(object):
         /* https://www.w3.org/TR/html52/document-metadata.html#the-style-element */
         .main {
             transform: translate(%(right)spx, %(down)spx);
-            /* height: %(height)spx;
-            width: %(width)spx; */
         }
         .graph {
             height: %(height)spx;
@@ -185,12 +183,17 @@ if __name__ == '__main__':
     import pathlib
     import os
 
-    x_labels = GraphLabel('Year', (2008, 2009, 2010, 2011, 2012), 100)
-    y_labels = GraphLabel('Price', (5, 10, 14), 100, include_zeroith=False)
+    x_labels = GraphLabel('Year',
+                          values=(2008, 2009, 2010, 2011, 2012),
+                          padding=100)
+    y_labels = GraphLabel('Price',
+                          values=(5, 10, 14),
+                          padding=100,
+                          include_zeroith=False)
 
     lg = LineGraph('Look at This Graph',
-                   height=480,
-                   width=900,
+                   height=580,
+                   width=700,
                    points=[
                        (0,0),
                        (2, 3),
