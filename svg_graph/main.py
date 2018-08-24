@@ -43,6 +43,9 @@ class LineGraph(object):
                 transform: translate(%(right)spx, %(down)spx);
                 height: %(height)spx;
                 width: %(width)spx;
+                stroke: #ccc;
+                stroke-dasharray: 0;
+                stroke-width: 1;
             }
         """ % dict(
             right=self.right,
@@ -66,7 +69,7 @@ class LineGraph(object):
         title = Element('title', attib={'id': 'title'})
         title.text = self.title
 
-        g = Element('g', attrib={'class': 'grid x-grid'})
+        g = Element('g', attrib={'class': 'grid'})
         line_x = Element(
             'line',
             attrib={
@@ -79,7 +82,7 @@ class LineGraph(object):
         g.append(line_x)
         svg.append(g)
 
-        g = Element('g', attrib={'class': 'grid y-grid'})
+        g = Element('g', attrib={'class': 'grid'})
         line_y = Element(
             'line',
             attrib={
