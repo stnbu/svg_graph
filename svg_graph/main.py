@@ -47,7 +47,7 @@ class LineGraph(object):
                 stroke-dasharray: 0;
                 stroke-width: 1;
             }
-            .graph .grid {
+            .graph .axis {
                 stroke: #ccc;
                 stroke-dasharray: 0;
                 stroke-width: 1;
@@ -78,7 +78,7 @@ class LineGraph(object):
         title = Element('title', attib={'id': 'title'})
         title.text = self.title
 
-        g = Element('g', attrib={'class': 'grid'})
+        g = Element('g', attrib={'class': 'axis'})
         line_x = Element(
             'line',
             attrib={
@@ -91,7 +91,7 @@ class LineGraph(object):
         g.append(line_x)
         svg.append(g)
 
-        g = Element('g', attrib={'class': 'grid'})
+        g = Element('g', attrib={'class': 'axis'})
         line_y = Element(
             'line',
             attrib={
