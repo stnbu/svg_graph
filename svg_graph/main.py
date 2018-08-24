@@ -39,6 +39,8 @@ class LineGraph(object):
         style.text = """
         /* requires HTML5.2 */
         /* https://www.w3.org/TR/html52/document-metadata.html#the-style-element */
+
+        /* `.main` are things we want to shift to account for labels */
         .main {
             transform: translate(%(right)spx, %(down)spx);
         }
@@ -88,21 +90,9 @@ class LineGraph(object):
         title = Element('title', attib={'id': 'title'})
         title.text = self.title
 
+        # X axis (the horizontal line)
         g = Element('g', attrib={'class': 'axis main'})
         line_x = Element(
-            'line',
-            attrib={
-                'x1': '0',
-                'y1': '0',
-                'x2': '0',
-                'y2': str(self.height),
-            },
-        )
-        g.append(line_x)
-        svg.append(g)
-
-        g = Element('g', attrib={'class': 'axis main'})
-        line_y = Element(
             'line',
             attrib={
                 'x1': '0',
@@ -111,10 +101,24 @@ class LineGraph(object):
                 'y2': str(self.height),
             },
         )
+        g.append(line_x)
+        svg.append(g)
+
+        # Y axis (the vertical line)
+        g = Element('g', attrib={'class': 'axis main'})
+        line_y = Element(
+            'line',
+            attrib={
+                'x1': '0',
+                'y1': '0',
+                'x2': '0',
+                'y2': str(self.height),
+            },
+        )
         g.append(line_y)
         svg.append(g)
 
-        #---
+        # X axis labels
         g = Element('g', attrib={
             'class': 'labels x-labels',
             'transform': 'translate(%(right)s,20)' % dict(right=self.right)})
@@ -130,6 +134,7 @@ class LineGraph(object):
         g.append(text)
         svg.append(g)
 
+        # Y axis labels
         g = Element('g', attrib={'class': 'labels y-labels'})
         for y, label in self.get_label_positions('y', self.labels[1]):
             text = Element('text', attrib={'x': str(self.right - 20), 'y': y})
@@ -142,8 +147,8 @@ class LineGraph(object):
         text.text = self.labels[1].text
         g.append(text)
         svg.append(g)
-        #---
-        
+
+        # generate a string, with newlines to represent the (x,y)'s of the `line` attribute
         points = []
         for x, y in self.points:
             h = x - self.right
@@ -151,6 +156,8 @@ class LineGraph(object):
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
+
+        # Draw an actual graph line
         g = Element('g', attrib={'class': 'main'})
         polyline = Element(
             'polyline',
@@ -164,10 +171,14 @@ class LineGraph(object):
         )
         g.append(polyline)
         svg.append(g)
+
+        # ZZZ adding <style/> here requires HTML5.2
+        # https://www.w3.org/TR/html52/document-metadata.html#the-style-element
         style_text = tostring(style).decode('utf-8')
         svg_text = tostring(svg).decode('utf-8')
         svg_text = svg_text.replace('&#10;', '\n')  # ZMG FIXME ZZZ TODO
         return style_text + svg_text
+
 
 class GraphLabel(object):
 
@@ -176,6 +187,7 @@ class GraphLabel(object):
         self.values = values
         self.padding = padding
         self.include_zeroith = include_zeroith
+
 
 if __name__ == '__main__':
 
@@ -195,14 +207,14 @@ if __name__ == '__main__':
                    height=580,
                    width=700,
                    points=[
-                       (0,0),
+                       (0, 0),
                        (2, 3),
                        (53, 87),
                        (99, 200),
                        (444, 50),
-                       (830,300)],
+                       (830, 300)],
                    labels=[x_labels, y_labels],
-    )
+                   )
 
     # Yuck. Don't know how to get around using a file.
     path = '/tmp/.test.html'
