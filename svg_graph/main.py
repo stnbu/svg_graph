@@ -127,8 +127,6 @@ if __name__ == '__main__':
     import pathlib
     import os
 
-    from tests import top, bottom
-
     lg = LineGraph('Look at This Graph',
                    height=480,
                    width=700,
@@ -144,11 +142,10 @@ if __name__ == '__main__':
                        ('Price', (None, 5, 10, 14))]
     )
 
-    page = top + str(lg) + bottom
     # Yuck. Don't know how to get around using a file.
     path = '/tmp/.test.html'
     with open(path, 'w') as f:
-        f.write(page)
+        f.write(str(lg))
 
     uri = pathlib.Path(path).as_uri()
 
