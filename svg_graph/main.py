@@ -21,9 +21,11 @@ class LineGraph(object):
         if axis == 'x':
             labels = self.labels[0][1]
             total = self.width
-        else:
+        elif axis == 'y':
             labels = list(reversed(self.labels[1][1]))
             total = self.height
+        else:
+            raise ValueError('do not understand axis="%s"' % axis)
 
         interlabel_distance = total / (len(labels) - 1)
         for i, label in enumerate(labels):
