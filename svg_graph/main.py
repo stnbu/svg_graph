@@ -5,14 +5,17 @@ import xml.etree.ElementTree as ET
 
 class LineGraph(object):
 
-    def __init__(self, title, hight, width, points, labels):
+    def __init__(self, title, height, width, points, labels):
+
         self.title = title
-        self.hight = hight
+
+        self.height = height
         self.width = width
         self.labels = labels
-
         self.points = points
-        self.over = 100
+
+        self.right = 0
+        self.down = 0
 
     def get_label_positions(self, axis):
         if axis == 'x':
@@ -20,7 +23,7 @@ class LineGraph(object):
             total = self.width
         else:
             labels = list(reversed(self.labels[1][1]))
-            total = self.hight
+            total = self.height
 
         interlabel_distance = total / (len(labels) - 1)
         for i, label in enumerate(labels):
@@ -29,6 +32,22 @@ class LineGraph(object):
             yield str(int(i * interlabel_distance)), str(label)
 
     def __str__(self):
+
+        style = ET.Element('style')
+        style.text = """
+            /* requires HTML5.2 */
+            /* https://www.w3.org/TR/html52/document-metadata.html#the-style-element */
+            .graph {
+                transform: translate(%(right)spx, %(down)spx);
+                height: %(height)spx;
+                width: %(width)spx;
+            }
+        """ % dict(
+            right=self.right,
+            down=self.down,
+            height=self.height+self.down,
+            width=self.width+self.right,
+        )
 
         svg = ET.Element(
             'svg',
@@ -45,70 +64,40 @@ class LineGraph(object):
         title = ET.Element('title', attib={'id': 'title'})
         title.text = self.title
 
-        g = ET.Element('g', attrib={'class': 'grid x-grid', 'id': 'xGrid',
-                                    'transform': 'translate(%(over)s,0)' % dict(over=self.over)})
+        g = ET.Element('g', attrib={'class': 'grid x-grid', 'id': 'xGrid'})
         line_x = ET.Element(
             'line',
             attrib={
                 'x1': '0',
                 'y1': '0',
                 'x2': '0',
-                'y2': str(self.hight),
+                'y2': str(self.height),
             },
         )
         g.append(line_x)
         svg.append(g)
 
-        g = ET.Element('g', attrib={'class': 'grid y-grid', 'id': 'yGrid',
-                                    'transform': 'translate(%(over)s,0)' % dict(over=self.over)})
+        g = ET.Element('g', attrib={'class': 'grid y-grid', 'id': 'yGrid'})
         line_y = ET.Element(
             'line',
             attrib={
                 'x1': '0',
-                'y1': str(self.hight),
+                'y1': str(self.height),
                 'x2': str(self.width),
-                'y2': str(self.hight),
+                'y2': str(self.height),
             },
         )
         g.append(line_y)
         svg.append(g)
 
-        g = ET.Element('g', attrib={
-            'class': 'labels x-labels',
-            'transform': 'translate(%(over)s,20)' % dict(over=self.over)})
-        for x, label in self.get_label_positions('x'):
-            text = ET.Element('text', attrib={'x': x, 'y': str(self.hight)})
-            text.text = label
-            g.append(text)
-        text = ET.Element('text', attrib={
-            'x': str(int(self.width / 2)),
-            'y': str(int(self.hight + 40)),
-            'class': 'label-title'})
-        text.text = self.labels[0][0]
-        g.append(text)
-        svg.append(g)
-
-        g = ET.Element('g', attrib={'class': 'labels y-labels'})
-        for y, label in self.get_label_positions('y'):
-            text = ET.Element('text', attrib={'x': str(self.over - 20), 'y': y})
-            text.text = label
-            g.append(text)
-        text = ET.Element('text', attrib={
-            'x': str(self.over / 2),
-            'y': str(self.hight / 2),
-            'class': 'label-title'})
-        text.text = self.labels[1][0]
-        g.append(text)
-        svg.append(g)
-
         points = []
         for x, y in self.points:
             h = x
-            v = self.hight - y
+            v = self.height - y
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
-        g = ET.Element('g', attrib={'transform': 'translate(%(over)s,0)' % dict(over=self.over)})
+        g = ET.Element('g', attrib={'class': 'graph'})
         polyline = ET.Element(
             'polyline',
             attrib={
@@ -120,8 +109,10 @@ class LineGraph(object):
         )
         g.append(polyline)
         svg.append(g)
-        fix_encoding = ET.tostring(svg).decode('utf-8')
-        return fix_encoding.replace('&#10;', '\n')  # ZMG FIXME ZZZ TODO
+        style_text = ET.tostring(style).decode('utf-8')
+        svg_text = ET.tostring(svg).decode('utf-8')
+        svg_text = svg_text.replace('&#10;', '\n')  # ZMG FIXME ZZZ TODO
+        return style_text + svg_text
 
 if __name__ == '__main__':
 
@@ -132,7 +123,7 @@ if __name__ == '__main__':
     from tests import top, bottom
 
     lg = LineGraph('Look at This Graph',
-                   hight=400,
+                   height=480,
                    width=700,
                    points=[
                        (0,0),
