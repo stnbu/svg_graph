@@ -66,7 +66,7 @@ class LineGraph(object):
         title = Element('title', attib={'id': 'title'})
         title.text = self.title
 
-        g = Element('g', attrib={'class': 'grid x-grid', 'id': 'xGrid'})
+        g = Element('g', attrib={'class': 'grid x-grid'})
         line_x = Element(
             'line',
             attrib={
@@ -79,7 +79,7 @@ class LineGraph(object):
         g.append(line_x)
         svg.append(g)
 
-        g = Element('g', attrib={'class': 'grid y-grid', 'id': 'yGrid'})
+        g = Element('g', attrib={'class': 'grid y-grid'})
         line_y = Element(
             'line',
             attrib={
