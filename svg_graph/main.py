@@ -71,8 +71,8 @@ class LineGraph(object):
         """ % dict(
             right=self.right,
             down=self.down,
-            height=self.height+self.down+100,
-            width=self.width+self.right+100,
+            height=self.height+self.down+self.labels[0].padding,
+            width=self.width+self.right+self.labels[1].padding,
         )
 
         svg = Element(
@@ -185,8 +185,8 @@ if __name__ == '__main__':
     import pathlib
     import os
 
-    x_labels = GraphLabel('Year', (2008, 2009, 2010, 2011, 2012), 50)
-    y_labels = GraphLabel('Price', (5, 10, 14), 50, include_zeroith=False)
+    x_labels = GraphLabel('Year', (2008, 2009, 2010, 2011, 2012), 100)
+    y_labels = GraphLabel('Price', (5, 10, 14), 100, include_zeroith=False)
 
     lg = LineGraph('Look at This Graph',
                    height=480,
