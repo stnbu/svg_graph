@@ -47,7 +47,7 @@ class LineGraph(object):
                 stroke-dasharray: 0;
                 stroke-width: 1;
             }
-            .graph .axis {
+            .axis {
                 stroke: #ccc;
                 stroke-dasharray: 0;
                 stroke-width: 1;
