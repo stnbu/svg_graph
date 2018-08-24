@@ -47,6 +47,15 @@ class LineGraph(object):
                 stroke-dasharray: 0;
                 stroke-width: 1;
             }
+            .graph .grid {
+                stroke: #ccc;
+                stroke-dasharray: 0;
+                stroke-width: 1;
+            }
+            .data {
+                fill: red;
+                stroke-width: 1;
+            }
         """ % dict(
             right=self.right,
             down=self.down,
