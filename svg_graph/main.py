@@ -15,21 +15,23 @@ class LineGraph(object):
         self.points = points
 
         self.right = 100
-        self.down = 0
+        self.down = 100
 
     def get_label_positions(self, axis, labels_object):
         if axis == 'x':
             labels = labels_object.values
             total = self.width
+            omit_index = 0
         elif axis == 'y':
             labels = list(reversed(labels_object.values))
             total = self.height
+            omit_index = len(labels) - 1
         else:
             raise ValueError('do not understand axis="%s"' % axis)
 
         interlabel_distance = total / (len(labels) - 1)
         for i, label in enumerate(labels):
-            if i == 0 and not labels_object.include_zeroith:
+            if i == omit_index and labels_object.omit_zeroith:
                 continue
             yield str(int(i * interlabel_distance)), str(label)
 
@@ -55,9 +57,11 @@ class LineGraph(object):
         }
         .labels.x-labels {
             text-anchor: middle;
+            transform: translate(%(right)spx,120px);
         }
         .labels.y-labels {
             text-anchor: end;
+            transform: translate(0px,%(down)spx);
         }
         .labels {
             font-size: 13px;
@@ -119,9 +123,7 @@ class LineGraph(object):
         svg.append(g)
 
         # X axis labels
-        g = Element('g', attrib={
-            'class': 'labels x-labels',
-            'transform': 'translate(%(right)s,20)' % dict(right=self.right)})
+        g = Element('g', attrib={'class': 'labels x-labels'})
         for x, label in self.get_label_positions('x', self.labels[0]):
             text = Element('text', attrib={'x': x, 'y': str(self.height)})
             text.text = label
@@ -182,11 +184,11 @@ class LineGraph(object):
 
 class GraphLabel(object):
 
-    def __init__(self, text, values, padding, include_zeroith=True):
+    def __init__(self, text, values, padding, omit_zeroith=False):
         self.text = text
         self.values = values
         self.padding = padding
-        self.include_zeroith = include_zeroith
+        self.omit_zeroith = omit_zeroith
 
 
 if __name__ == '__main__':
@@ -199,9 +201,9 @@ if __name__ == '__main__':
                           values=(2008, 2009, 2010, 2011, 2012),
                           padding=100)
     y_labels = GraphLabel('Price',
-                          values=(5, 10, 14),
+                          values=(0, 5, 10, 15),
                           padding=100,
-                          include_zeroith=False)
+                          omit_zeroith=True)
 
     lg = LineGraph('Look at This Graph',
                    height=580,
@@ -212,7 +214,7 @@ if __name__ == '__main__':
                        (53, 87),
                        (99, 200),
                        (444, 50),
-                       (830, 300)],
+                       (700, 580)],
                    labels=[x_labels, y_labels],
                    )
 
