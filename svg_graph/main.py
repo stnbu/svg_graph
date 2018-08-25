@@ -14,8 +14,8 @@ class LineGraph(object):
         self.labels = labels
         self.points = points
 
-        self.right = 100
-        self.down = 100
+        self.right = self.labels[0].padding
+        self.down = self.labels[1].padding
 
     def get_label_positions(self, axis, labels_object):
         if axis == 'x':
@@ -57,7 +57,7 @@ class LineGraph(object):
         }
         .labels.x-labels {
             text-anchor: middle;
-            transform: translate(%(right)spx,120px);
+            transform: translate(%(right)spx,%(xlabels_down)spx);
         }
         .labels.y-labels {
             text-anchor: end;
@@ -77,6 +77,7 @@ class LineGraph(object):
             down=self.down,
             height=self.height+self.down+self.labels[0].padding,
             width=self.width+self.right+self.labels[1].padding,
+            xlabels_down=self.down+20,
         )
 
         svg = Element(
@@ -215,8 +216,7 @@ if __name__ == '__main__':
                        (99, 200),
                        (444, 50),
                        (700, 580)],
-                   labels=[x_labels, y_labels],
-                   )
+                   labels=[x_labels, y_labels])
 
     # Yuck. Don't know how to get around using a file.
     path = '/tmp/.test.html'
