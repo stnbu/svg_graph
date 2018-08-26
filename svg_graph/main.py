@@ -154,8 +154,8 @@ class LineGraph(object):
         # generate a string, with newlines to represent the (x,y)'s of the `line` attribute
         points = []
         for x, y in self.points:
-            h = x - self.right
-            v = self.height - self.down - y
+            h = x - self.right  # h for horizontal
+            v = self.height - self.down - y  # v for vertical
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
