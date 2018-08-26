@@ -5,17 +5,51 @@ from xml.etree.ElementTree import Element, tostring
 
 class LineGraph(object):
 
-    def __init__(self, title, height, width, points, labels):
+    def __init__(self, title, points, height=400, width=600, labels=None, normalize=True):
 
         self.title = title
-
         self.height = height
         self.width = width
-        self.labels = labels
-        self.points = points
+
+        if normalize:
+            self._raw_points = points
+            self.points = self.map_to_scale(self._raw_points)
+        else:
+            self.points = self._raw_points = points
+
+        if labels is None:
+            self.labels = self.make_labels()
+        else:
+            self.labels = labels
 
         self.right = self.labels[0].padding
         self.down = self.labels[1].padding
+
+    def make_labels(self):
+        num_labels = 6
+        labels = []
+        x_labels = []
+        y_labels = []
+        len_points = len(self._raw_points)
+        distance = len_points / num_labels
+        for l in range(0, num_labels):
+            i = int(distance * l)
+            x_labels.append(str(self._raw_points[i][0]))
+            y_labels.append(str(self._raw_points[i][1]))
+        return GraphLabel('X', x_labels, 100), GraphLabel('Y', y_labels, 100)
+
+    def map_to_scale(self, points):
+        x_min = min([x for x, _ in points])
+        x_max = max([x for x, _ in points])
+        y_min = min([y for _, y in points])
+        y_max = max([y for _, y in points])
+
+        _points = []
+        for x, y in points:
+            x_mul = 1 - (x_max - x) / (x_max - x_min)
+            y_mul = 1 - (y_max - y) / (y_max - y_min)
+            _points.append((x_mul * self.width, y_mul * self.height))
+        return _points
 
     def get_label_positions(self, axis, labels_object):
         if axis == 'x':
