@@ -5,11 +5,11 @@ from xml.etree.ElementTree import Element, tostring
 
 class LineGraph(object):
 
-    def __init__(self, title, points, height=400, width=600, labels=None, normalize=True):
-
+    def __init__(self, title, points, height=400, width=600, labels=None, normalize=True, linear_x=False):
         self.title = title
         self.height = height
         self.width = width
+        self.linear_x = linear_x
 
         if normalize:
             self._raw_points = points
@@ -39,14 +39,21 @@ class LineGraph(object):
         return GraphLabel('X', x_labels, 100), GraphLabel('Y', y_labels, 100)
 
     def map_to_scale(self, points):
-        x_min = min([x for x, _ in points])
-        x_max = max([x for x, _ in points])
+        if self.linear_x:
+            x_unit = 1 / len(points)
+        else:
+            x_min = min([x for x, _ in points])
+            x_max = max([x for x, _ in points])
         y_min = min([y for _, y in points])
         y_max = max([y for _, y in points])
 
         _points = []
-        for x, y in points:
-            x_mul = 1 - (x_max - x) / (x_max - x_min)
+        for i, point in enumerate(points):
+            x, y = point
+            if self.linear_x:
+                x_mul = i * x_unit
+            else:
+                x_mul = 1 - (x_max - x) / (x_max - x_min)
             y_mul = 1 - (y_max - y) / (y_max - y_min)
             _points.append((x_mul * self.width, y_mul * self.height))
         return _points
