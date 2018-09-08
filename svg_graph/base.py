@@ -3,14 +3,23 @@
 from xml.etree.ElementTree import Element, tostring
 
 
+class Points(list):
+
+    def __init__(self, *args, **kwargs):
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+        super().__init__(*args, **kwargs)
+
+
 class LineGraph(object):
 
-    def __init__(self, title, points, height=400, width=600, normalize=True):
+    def __init__(self, title, points_set, height=400, width=600, normalize=True):
         self.title = title
         self.height = height
         self.width = width
-        points = list(points)  # we should be dealing with smallish data sets.
-        self.points = self.normalize(points)
+        self.points_set = []
+        for points in points_set:
+            self.points_set.append(Points(self.normalize(points), color=points.color))
 
     def normalize(self, points):
         x_min = min([x for x, _ in points])
@@ -23,6 +32,31 @@ class LineGraph(object):
             y_mul = 1 - (y_max - y) / (y_max - y_min)
             # it's likely (enough?) converting to int here is cheaper than doing it in the browser, etc.
             yield int(x_mul * self.width), int(y_mul * self.height)
+
+    def get_line(self, points):
+        # generate a string, with newlines to represent the (x,y)'s of the `line` attribute
+        points_text = []
+        for x, y in points:
+            h = x  # h for horizontal
+            v = self.height - y  # v for vertical
+            points_text.append('%s, %s' % (h, v))
+        points_text = '\n'.join(points_text)
+        points_text = '\n' + points_text + '\n'
+
+        # style="color:blue;"
+        g = Element('g', attrib={'class': 'main'})
+        polyline = Element(
+            'polyline',
+            attrib={
+                'fill': 'none',
+                'stroke': points.color,
+                'stroke-width': '1',
+                'points': points_text,
+                'class': 'main',
+            },
+        )
+        g.append(polyline)
+        return g
 
     def to_xml(self):
 
@@ -93,29 +127,9 @@ class LineGraph(object):
         g.append(line_y)
         svg.append(g)
 
-        # generate a string, with newlines to represent the (x,y)'s of the `line` attribute
-        points = []
-        for x, y in self.points:
-            h = x  # h for horizontal
-            v = self.height - y  # v for vertical
-            points.append('%s, %s' % (h, v))
-        points = '\n'.join(points)
-        points = '\n' + points + '\n'
-
-        # Draw an actual graph line
-        g = Element('g', attrib={'class': 'main'})
-        polyline = Element(
-            'polyline',
-            attrib={
-                'fill': 'none',
-                'stroke': '#0074d9',
-                'stroke-width': '2',
-                'points': points,
-                'class': 'main',
-            },
-        )
-        g.append(polyline)
-        svg.append(g)
+        for points in self.points_set:
+            g = self.get_line(points)
+            svg.append(g)
 
         # ZZZ adding <style/> here requires HTML5.2
         # https://www.w3.org/TR/html52/document-metadata.html#the-style-element
