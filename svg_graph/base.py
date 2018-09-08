@@ -5,15 +5,12 @@ from xml.etree.ElementTree import Element, tostring
 
 class LineGraph(object):
 
-    def __init__(self, title, points, height=400, width=600, normalize=True, length=None):
+    def __init__(self, title, points, height=400, width=600, normalize=True):
         self.title = title
         self.height = height
         self.width = width
-        if length is not None:
-            self.length = length
-        else:
-            self.length = len(points)
-        self.points = self.normalize(list(points))
+        points = list(points)  # we should be dealing with smallish data sets.
+        self.points = self.normalize(points)
 
     def normalize(self, points):
         x_min = min([x for x, _ in points])
