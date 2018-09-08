@@ -74,6 +74,9 @@ class LineGraph(object):
         .graph {
             height: %(height)spx;
             width: %(width)spx;
+            background-color: white;
+            margin-top: 15;
+            padding: 50;
         }
         .axis {
             stroke: #ccc;
