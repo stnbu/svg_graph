@@ -5,88 +5,41 @@ from xml.etree.ElementTree import Element, tostring
 
 class LineGraph(object):
 
-    def __init__(self, title, points, height=400, width=600, labels=None, normalize=True, linear_x=False):
+    def __init__(self, title, points, height=400, width=600, normalize=True, length=None):
         self.title = title
         self.height = height
         self.width = width
-        self.linear_x = linear_x
-
-        if normalize:
-            self._raw_points = points
-            self.points = self.map_to_scale(self._raw_points)
+        if length is not None:
+            self.length = length
         else:
-            self.points = self._raw_points = points
+            self.length = len(points)
+        self.points = self.normalize(list(points))
 
-        if labels is None:
-            self.labels = self.make_labels()
-        else:
-            self.labels = labels
-
-        self.right = self.labels[0].padding
-        self.down = self.labels[1].padding
-
-    def make_labels(self):
-        num_labels = 6
-        labels = []
-        x_labels = []
-        y_labels = []
-        len_points = len(self._raw_points)
-        distance = len_points / num_labels
-        for l in range(0, num_labels):
-            i = int(distance * l)
-            x_labels.append(str(self._raw_points[i][0]))
-            y_labels.append(str(self._raw_points[i][1]))
-        return GraphLabel('X', x_labels, 100), GraphLabel('Y', y_labels, 100)
-
-    def map_to_scale(self, points):
-        if self.linear_x:
-            x_unit = 1 / len(points)
-        else:
-            x_min = min([x for x, _ in points])
-            x_max = max([x for x, _ in points])
+    def normalize(self, points):
+        x_min = min([x for x, _ in points])
+        x_max = max([x for x, _ in points])
         y_min = min([y for _, y in points])
         y_max = max([y for _, y in points])
-
-        _points = []
-        for i, point in enumerate(points):
+        for point in points:
             x, y = point
-            if self.linear_x:
-                x_mul = i * x_unit
-            else:
-                x_mul = 1 - (x_max - x) / (x_max - x_min)
+            x_mul = 1 - (x_max - x) / (x_max - x_min)
             y_mul = 1 - (y_max - y) / (y_max - y_min)
-            _points.append((x_mul * self.width, y_mul * self.height))
-        return _points
+            # it's likely (enough?) converting to int here is cheaper than doing it in the browser, etc.
+            yield int(x_mul * self.width), int(y_mul * self.height)
 
-    def get_label_positions(self, axis, labels_object):
-        if axis == 'x':
-            labels = labels_object.values
-            total = self.width
-            omit_index = 0
-        elif axis == 'y':
-            labels = list(reversed(labels_object.values))
-            total = self.height
-            omit_index = len(labels) - 1
-        else:
-            raise ValueError('do not understand axis="%s"' % axis)
+    def to_xml(self):
 
-        interlabel_distance = total / (len(labels) - 1)
-        for i, label in enumerate(labels):
-            if i == omit_index and labels_object.omit_zeroith:
-                continue
-            yield str(int(i * interlabel_distance)), str(label)
-
-    def __str__(self):
-
-        style = Element('style')
+        style = Element('style')  # but how "<style scoped>"?
         style.text = """
         /* requires HTML5.2 */
         /* https://www.w3.org/TR/html52/document-metadata.html#the-style-element */
 
         /* `.main` are things we want to shift to account for labels */
+        /*
         .main {
-            transform: translate(%(right)spx, %(down)spx);
+            transform: translate(Xpx, Ypx);
         }
+        */
         .graph {
             height: %(height)spx;
             width: %(width)spx;
@@ -96,29 +49,9 @@ class LineGraph(object):
             stroke-dasharray: 0;
             stroke-width: 1;
         }
-        .labels.x-labels {
-            text-anchor: middle;
-            transform: translate(%(right)spx,%(xlabels_down)spx);
-        }
-        .labels.y-labels {
-            text-anchor: end;
-            transform: translate(0px,%(down)spx);
-        }
-        .labels {
-            font-size: 13px;
-        }
-        .label-title {
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 12px;
-            fill: black;
-        }
         """ % dict(
-            right=self.right,
-            down=self.down,
-            height=self.height+self.down+self.labels[0].padding,
-            width=self.width+self.right+self.labels[1].padding,
-            xlabels_down=self.down+20,
+            height=self.height,
+            width=self.width,
         )
 
         svg = Element(
@@ -128,7 +61,6 @@ class LineGraph(object):
                 'xmlns': 'http://www.w3.org/2000/svg',
                 'xmlns:xlink': 'http://www.w3.org/1999/xlink',
                 'class': 'graph',
-                'aria-labelledby': 'title',
                 'role': 'img',
             }
         )
@@ -164,39 +96,11 @@ class LineGraph(object):
         g.append(line_y)
         svg.append(g)
 
-        # X axis labels
-        g = Element('g', attrib={'class': 'labels x-labels'})
-        for x, label in self.get_label_positions('x', self.labels[0]):
-            text = Element('text', attrib={'x': x, 'y': str(self.height)})
-            text.text = label
-            g.append(text)
-        text = Element('text', attrib={
-            'x': str(int(self.width / 2)),
-            'y': str(int(self.height + 40)),
-            'class': 'label-title'})
-        text.text = self.labels[0].text
-        g.append(text)
-        svg.append(g)
-
-        # Y axis labels
-        g = Element('g', attrib={'class': 'labels y-labels'})
-        for y, label in self.get_label_positions('y', self.labels[1]):
-            text = Element('text', attrib={'x': str(self.right - 20), 'y': y})
-            text.text = label
-            g.append(text)
-        text = Element('text', attrib={
-            'x': str(self.right / 2),
-            'y': str(self.height / 2),
-            'class': 'label-title'})
-        text.text = self.labels[1].text
-        g.append(text)
-        svg.append(g)
-
         # generate a string, with newlines to represent the (x,y)'s of the `line` attribute
         points = []
         for x, y in self.points:
-            h = x - self.right  # h for horizontal
-            v = self.height - self.down - y  # v for vertical
+            h = x  # h for horizontal
+            v = self.height - y  # v for vertical
             points.append('%s, %s' % (h, v))
         points = '\n'.join(points)
         points = '\n' + points + '\n'
@@ -223,29 +127,11 @@ class LineGraph(object):
         svg_text = svg_text.replace('&#10;', '\n')  # ZMG FIXME ZZZ TODO
         return style_text + svg_text
 
-
-class GraphLabel(object):
-
-    def __init__(self, text, values, padding, omit_zeroith=False):
-        self.text = text
-        self.values = values
-        self.padding = padding
-        self.omit_zeroith = omit_zeroith
-
-
 if __name__ == '__main__':
 
     import webbrowser
     import pathlib
     import os
-
-    x_labels = GraphLabel('Year',
-                          values=(2008, 2009, 2010, 2011, 2012),
-                          padding=100)
-    y_labels = GraphLabel('Price',
-                          values=(0, 5, 10, 15),
-                          padding=100,
-                          omit_zeroith=True)
 
     lg = LineGraph('Look at This Graph',
                    height=580,
@@ -256,8 +142,7 @@ if __name__ == '__main__':
                        (53, 87),
                        (99, 200),
                        (444, 50),
-                       (700, 580)],
-                   labels=[x_labels, y_labels])
+                       (700, 580)])
 
     # Yuck. Don't know how to get around using a file.
     path = '/tmp/.test.html'
