@@ -19,7 +19,9 @@ class LineGraph(object):
         self.width = width
         self.points_set = []
         for points in points_set:
-            self.points_set.append(Points(self.normalize(points), color=points.color))
+            p = Points(self.normalize(points))
+            p.color = points.color
+            self.points_set.append(p)
 
     def normalize(self, points):
         x_min = min([x for x, _ in points])
